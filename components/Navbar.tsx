@@ -132,7 +132,7 @@ export default function Navbar() {
                   ease,
                 }}
                 onClick={() => scrollTo("kontakt")}
-                className="mt-2 px-5 py-2.5 rounded-full text-sm uppercase tracking-widest font-medium text-white transition-all duration-200 hover:opacity-90 active:scale-95 w-full"
+                className="mt-2 px-5 py-2.5 rounded-full text-sm uppercase tracking-widest font-medium text-white w-full"
                 style={{ background: "var(--accent)" }}
               >
                 Kontakt

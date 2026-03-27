@@ -137,9 +137,9 @@ export default function HeroSection() {
               </div>
               <div className="space-y-3">
                 {[
-                  { label: "Završenih projekata", val: "50+" },
-                  { label: "Direktan dogovor", val: "0 posrednika" },
-                  { label: "Svaki projekt", val: "osobno" },
+                  { label: "Projekata", val: "50+" },
+                  { label: "Dogovor", val: "direktno" },
+                  { label: "Vodstvo", val: "osobno" },
                 ].map((s) => (
                   <div
                     key={s.label}
@@ -147,7 +147,7 @@ export default function HeroSection() {
                   >
                     <span className="text-xs text-stone-500">{s.label}</span>
                     <span
-                      className="font-display text-xl"
+                      className="font-display text-lg sm:text-xl"
                       style={{ color: "var(--accent)" }}
                     >
                       {s.val}
