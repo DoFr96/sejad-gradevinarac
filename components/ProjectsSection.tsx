@@ -295,6 +295,19 @@ function ProjectCard({
 export default function ProjectsSection() {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      projects.forEach((project) => {
+        project.images.forEach((src) => {
+          const img = new window.Image();
+          img.src = src;
+        });
+      });
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <section id="projekti" className="py-16 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto">
