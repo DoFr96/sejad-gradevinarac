@@ -17,7 +17,7 @@ const itemVariants: Variants = {
 const PHONE_DISPLAY = "+385 95 806 7078";
 const PHONE_NUMBER = "385958067078";
 const WHATSAPP_MESSAGE =
-  "Pozdrav, zanima me ponuda za gra\u0111evinske radove.";
+  "Pozdrav, zanima me ponuda za roh-bau / renovaciju ku\u0107e.";
 
 export default function ContactSection() {
   const whatsappUrl = `https://wa.me/${PHONE_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`;
@@ -66,7 +66,7 @@ export default function ContactSection() {
                 WHATSAPP
               </div>
               <div className="text-white/80 text-sm font-light">
-                Pi\u0161ite nam odmah →
+                Javite nam se odmah →
               </div>
             </div>
           </motion.a>

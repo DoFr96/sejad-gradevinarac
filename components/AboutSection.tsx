@@ -55,22 +55,32 @@ export default function AboutSection() {
                 S.A.M.
               </div>
               <p className="text-stone-300 text-sm leading-relaxed font-light mb-2">
-                <span className="text-amber-400/60 text-xs uppercase tracking-widest">NKD 41.00</span>{" "}
-                <span className="text-stone-400 text-xs">— Građenje stambenih i nestambenih zgrada</span>
+                <span className="text-amber-400/60 text-xs uppercase tracking-widest">
+                  NKD 41.00
+                </span>{" "}
+                <span className="text-stone-400 text-xs">
+                  — Građenje stambenih i nestambenih zgrada
+                </span>
               </p>
               <p className="text-stone-300 text-sm leading-relaxed font-light mb-4">
-                S.A.M. Gradnja j.d.o.o. specijalizirana je za kompletne
-                građevinske radove — od roh-bau faze do gotovog objekta.
-                Zidanje, betoniranje, armiranje, fasaderski radovi i sve
-                što dolazi između. Radimo brzo, čisto i po dogovoru.
+                S.A.M. Gradnja j.d.o.o. radi dvije stvari: roh-bau novogradnje i
+                renovaciju starih kuća. Nismo firma koja radi &quot;sve&quot; —
+                namjerno. Kad se čovjek 25 godina bavi temeljima, betonom,
+                zidovima i starim kućama, nauči ih čitati. Zna gdje kuća diše,
+                gdje popušta i što joj stvarno treba.
               </p>
               <p className="text-stone-400 text-sm leading-relaxed font-light">
-                Sa sjedištem u Rijeci pokrivamo Primorsko-goransku županiju
-                i šire. Vlasnik Sejad osobno vodi svaki projekt od početka
+                Sa sjedištem u Rijeci pokrivamo Primorsko-goransku županiju i
+                šire. Vlasnik Sejad osobno vodi svako gradilište od prvog iskopa
                 do predaje — bez podizvođača, bez iznenađenja.
               </p>
               <div className="mt-6 flex gap-4 flex-wrap">
-                {["Roh-bau", "Zidanje", "Betoniranje", "Fasade"].map((v) => (
+                {[
+                  "Roh-bau",
+                  "Renovacija starih kuća",
+                  "Betoniranje",
+                  "Sanacije",
+                ].map((v) => (
                   <div key={v} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
                     <span className="text-xs uppercase tracking-widest text-stone-400">
@@ -90,25 +100,25 @@ export default function AboutSection() {
               style={{ background: "var(--card)" }}
             >
               <div className="text-xs uppercase tracking-widest text-stone-500 mb-4">
-                Na\u0161 pristup
+                Naš pristup
               </div>
               <div className="space-y-3">
                 {[
                   {
                     step: "01",
-                    text: "Slu\u0161amo i razumijemo va\u0161 projekt",
+                    text: "Dođemo na teren i pogledamo objekt uživo",
                   },
                   {
                     step: "02",
-                    text: "Izra\u0111ujemo detaljan plan i tro\u0161kovnik",
+                    text: "Kažemo iskreno što treba i izradimo troškovnik",
                   },
                   {
                     step: "03",
-                    text: "Gradimo uz dnevno izvje\u0161tavanje",
+                    text: "Gradimo — uredno, brzo i uz stalni kontakt",
                   },
                   {
                     step: "04",
-                    text: "Predajemo klju\u010Deve — bez iznena\u0111enja",
+                    text: "Predajemo posao gotov — bez iznenađenja",
                   },
                 ].map((s) => (
                   <div key={s.step} className="flex gap-3 items-start">

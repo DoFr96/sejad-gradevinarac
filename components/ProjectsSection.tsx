@@ -16,62 +16,100 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
 };
 
-const projects = [
+/* ─────────────────────────────────────────────────────────────
+   MEDIJI S GRADILIŠTA
+   Slike idu u  public/projects/  a videi u  public/videos/
+   Slobodno promijeni naslove i opise — samo pazi da se
+   nazivi datoteka poklapaju s onima u public mapi.
+
+   ŠTO JE POPRAVLJENO:
+   1) Lightbox više NE renderira svih 8 slika odjednom kao
+      <Image fill priority>. To je bio uzrok da se dio slika
+      ne učita — 8 istovremenih "priority" zahtjeva zaguši
+      Next-ov image optimizer i dio otkaže. Sada se prikazuje
+      SAMO trenutna slika (obični <img>), a susjedne se tiho
+      predučitaju u cache pa je listanje i dalje trenutno.
+   2) U gridu je "priority" samo na PRVOJ kartici; ostale se
+      lijeno učitavaju kad dođu u vidokrug.
+   ───────────────────────────────────────────────────────────── */
+
+type MediaItem = { kind: "image" | "video"; src: string };
+
+type Project = {
+  id: number;
+  title: string;
+  type: string;
+  year: string;
+  fallback: string;
+  span?: string;
+  /* Za projekte s vertikalnim (9:16) slikama — kartica ih
+     prikazuje dvije jednu pored druge preko cijele širine */
+  portraitPair?: boolean;
+  media: MediaItem[];
+};
+
+const projects: Project[] = [
   {
     id: 1,
-    title: "Stambeni kompleks Savica",
-    type: "Stambeno",
-    year: "2024",
+    title: "Izgradnja novogradnje - stanovi",
+    type: "Novogradnja",
+    year: "2025",
     fallback: "from-stone-600 to-stone-800",
     span: "lg:col-span-2",
-    images: [
-      "/projects/zgrada1.jpg",
-      "/projects/zgrada1.jpg",
-      "/projects/zgrada1.jpg",
+    media: [
+      { kind: "image", src: "/projects/stara-kuca-1.jpg" },
+      { kind: "image", src: "/projects/stara-kuca-2.jpg" },
     ],
   },
   {
     id: 2,
-    title: "Poslovna zgrada Jankomir",
-    type: "Poslovni",
-    year: "2023",
+    title: "Roh-bau — temelji",
+    type: "Roh-bau",
+    year: "2025",
     fallback: "from-amber-800 to-stone-900",
     span: "lg:col-span-1",
-    images: [
-      "/projects/temelji1.jpg",
-      "/projects/temelji1.jpg",
-      "/projects/temelji1.jpg",
+    media: [
+      { kind: "video", src: "/videos/gradiliste-2.mp4" },
+      { kind: "video", src: "/videos/gradiliste-22.mp4" },
     ],
   },
   {
     id: 3,
-    title: "Sportski centar Sesvete",
-    type: "Sport & Rekreacija",
-    year: "2023",
+    title: "Zidanje",
+    type: "Roh-bau",
+    year: "2026",
     fallback: "from-stone-700 to-stone-900",
     span: "lg:col-span-1",
-    images: [
-      "/projects/img44.jpg",
-      "/projects/img44.jpg",
-      "/projects/img44.jpg",
-    ],
+    media: [{ kind: "video", src: "/videos/gradiliste-5.mp4" }],
   },
   {
     id: 4,
-    title: "Rekonstrukcija \u017Dupne crkve",
-    type: "Kulturna ba\u0161tina",
-    year: "2022",
+    title: "Radovi u tijeku",
+    type: "S terena",
+    year: "2026",
     fallback: "from-stone-500 to-amber-900",
     span: "lg:col-span-2",
-    images: [
-      "/projects/img20.jpg",
-      "/projects/img20.jpg",
-      "/projects/img20.jpg",
+    media: [{ kind: "video", src: "/videos/gradiliste-4.mp4" }],
+  },
+  {
+    id: 6,
+    title: "Obiteljska kuća — temelji do krova",
+    type: "Roh-bau",
+    year: "2025",
+    fallback: "from-stone-800 to-stone-950",
+    span: "sm:col-span-2 lg:col-span-3",
+    media: [
+      { kind: "image", src: "/projects/projekt-6a1.jpg" },
+      { kind: "image", src: "/projects/projekt-6a2.jpg" },
+      { kind: "image", src: "/projects/projekt-6a3.jpg" },
+      { kind: "image", src: "/projects/projekt-6a4.jpg" },
+      { kind: "image", src: "/projects/projekt-6a5.jpg" },
+      { kind: "image", src: "/projects/projekt-6a6.jpg" },
+      { kind: "image", src: "/projects/projekt-6a7.jpg" },
+      { kind: "image", src: "/projects/projekt-6a8.jpg" },
     ],
   },
 ];
-
-type Project = (typeof projects)[number];
 
 /* ───────────────────────── Lightbox ───────────────────────── */
 
@@ -83,20 +121,13 @@ function Lightbox({
   onClose: () => void;
 }) {
   const [current, setCurrent] = useState(0);
-  const [imgErrors, setImgErrors] = useState<Set<number>>(new Set());
+  const [errored, setErrored] = useState<Set<number>>(new Set());
+  const n = project.media.length;
 
-  const prev = useCallback(
-    () =>
-      setCurrent(
-        (c) => (c - 1 + project.images.length) % project.images.length,
-      ),
-    [project.images.length],
-  );
-  const next = useCallback(
-    () => setCurrent((c) => (c + 1) % project.images.length),
-    [project.images.length],
-  );
+  const prev = useCallback(() => setCurrent((c) => (c - 1 + n) % n), [n]);
+  const next = useCallback(() => setCurrent((c) => (c + 1) % n), [n]);
 
+  /* Tipkovnica + zaključavanje scrolla iza modala */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -111,8 +142,22 @@ function Lightbox({
     };
   }, [onClose, prev, next]);
 
-  const handleImgError = (idx: number) =>
-    setImgErrors((s) => new Set(s).add(idx));
+  /* Predučitaj SAMO susjedne slike (prethodnu i sljedeću) u
+     browser cache. Zato je listanje trenutno, a NE šaljemo
+     svih 8 zahtjeva odjednom (to je bilo ono što je pucalo). */
+  useEffect(() => {
+    if (n < 2) return;
+    [(current + 1) % n, (current - 1 + n) % n].forEach((i) => {
+      const m = project.media[i];
+      if (m?.kind === "image") {
+        const img = new window.Image();
+        img.src = m.src;
+      }
+    });
+  }, [current, n, project.media]);
+
+  const media = project.media[current];
+  const isErrored = errored.has(current);
 
   return (
     <motion.div
@@ -123,11 +168,11 @@ function Lightbox({
       className="fixed inset-0 z-[100] flex items-center justify-center"
       onClick={onClose}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+      {/* Backdrop — zamućena stranica iza */}
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-xl" />
 
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 sm:p-6">
+      <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-4 sm:p-6">
         <div>
           <div
             className="text-xs uppercase tracking-widest mb-0.5"
@@ -141,6 +186,7 @@ function Lightbox({
         </div>
         <button
           onClick={onClose}
+          aria-label="Zatvori"
           className="w-10 h-10 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -149,43 +195,49 @@ function Lightbox({
         </button>
       </div>
 
-      {/* Main image */}
+      {/* Glavni medij — prikazuje se SAMO trenutni.
+          Za slike koristimo obični <img> (bez Next optimizera i
+          bez "fill" stackanja) — tako se uvijek pouzdano učita.
+          9:16 ostaje 9:16 jer je object-contain. */}
       <div
-        className="relative z-10 w-full max-w-5xl mx-4 sm:mx-8"
-        style={{ aspectRatio: "16/10" }}
+        className="relative z-10 w-full max-w-5xl mx-4 sm:mx-8 h-[72vh] sm:h-[78vh] flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current}
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.97 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 rounded-xl overflow-hidden"
+        {media.kind === "video" ? (
+          <video
+            key={media.src}
+            src={media.src}
+            className="max-h-full max-w-full object-contain"
+            controls
+            autoPlay
+            playsInline
+          />
+        ) : isErrored ? (
+          <div
+            className={`flex items-center justify-center w-64 h-40 rounded-xl bg-gradient-to-br ${project.fallback} text-white/80 text-sm text-center px-4`}
           >
-            <div
-              className={`absolute inset-0 bg-gradient-to-br ${project.fallback}`}
-            />
-            {!imgErrors.has(current) && (
-              <Image
-                src={project.images[current]}
-                alt={`${project.title} - ${current + 1}`}
-                fill
-                className="object-cover"
-                sizes="(max-width: 1024px) 95vw, 1024px"
-                onError={() => handleImgError(current)}
-                priority
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
+            Slika se ne može učitati:
+            <br />
+            {media.src}
+          </div>
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={media.src}
+            src={media.src}
+            alt={`${project.title} — ${current + 1}`}
+            className="max-h-full max-w-full object-contain select-none"
+            draggable={false}
+            onError={() => setErrored((s) => new Set(s).add(current))}
+          />
+        )}
 
-        {/* Nav arrows */}
-        {project.images.length > 1 && (
+        {/* Strelice */}
+        {n > 1 && (
           <>
             <button
               onClick={prev}
+              aria-label="Prethodna"
               className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -194,6 +246,7 @@ function Lightbox({
             </button>
             <button
               onClick={next}
+              aria-label="Sljedeća"
               className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 flex items-center justify-center text-white hover:bg-black/60 transition-colors"
             >
               <svg viewBox="0 0 24 24" className="w-5 h-5 fill-current">
@@ -204,12 +257,13 @@ function Lightbox({
         )}
       </div>
 
-      {/* Dots */}
-      {project.images.length > 1 && (
-        <div className="absolute bottom-6 left-0 right-0 z-10 flex justify-center gap-2">
-          {project.images.map((_, i) => (
+      {/* Točkice */}
+      {n > 1 && (
+        <div className="absolute bottom-6 left-0 right-0 z-20 flex justify-center gap-2">
+          {project.media.map((_, i) => (
             <button
               key={i}
+              aria-label={`Idi na ${i + 1}`}
               onClick={(e) => {
                 e.stopPropagation();
                 setCurrent(i);
@@ -231,12 +285,18 @@ function Lightbox({
 
 function ProjectCard({
   project,
+  priority,
   onOpen,
 }: {
   project: Project;
+  priority: boolean;
   onOpen: () => void;
 }) {
-  const [imgError, setImgError] = useState(false);
+  const [errored, setErrored] = useState<Set<number>>(new Set());
+  const cover = project.media[0];
+  const videoCount = project.media.filter((m) => m.kind === "video").length;
+
+  const addError = (idx: number) => setErrored((s) => new Set(s).add(idx));
 
   return (
     <motion.div
@@ -245,47 +305,97 @@ function ProjectCard({
       onClick={onOpen}
       className={`group relative rounded-2xl overflow-hidden cursor-pointer ${project.span ?? ""}`}
     >
-      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${project.fallback}`}
-        />
-        {!imgError && (
-          <Image
-            src={project.images[0]}
-            alt={project.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 66vw"
-            onError={() => setImgError(true)}
-          />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
-        <div className="absolute bottom-0 left-0 p-5 sm:p-6">
+      {project.portraitPair ? (
+        /* ── Dvije vertikalne (9:16) slike jedna pored druge ── */
+        <div className="relative w-full grid grid-cols-2">
+          {project.media.slice(0, 2).map((m, i) => (
+            <div key={i} className="relative" style={{ paddingBottom: "115%" }}>
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${project.fallback}`}
+              />
+              {!errored.has(i) && (
+                <Image
+                  src={m.src}
+                  alt={`${project.title} - ${i + 1}`}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 640px) 50vw, 33vw"
+                  onError={() => addError(i)}
+                />
+              )}
+            </div>
+          ))}
+          <div className="absolute inset-y-0 left-1/2 w-px bg-black/30 -translate-x-1/2" />
+        </div>
+      ) : (
+        /* ── Standardna 16:9 kartica — prikazuje se SAMO naslovnica ── */
+        <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
           <div
-            className="text-xs uppercase tracking-widest mb-1"
-            style={{ color: "var(--accent-light)" }}
-          >
-            {project.type} · {project.year}
-          </div>
-          <div className="font-display text-xl sm:text-2xl text-white tracking-wide leading-tight">
-            {project.title}
-          </div>
+            className={`absolute inset-0 bg-gradient-to-br ${project.fallback}`}
+          />
+          {!errored.has(0) &&
+            (cover.kind === "video" ? (
+              <video
+                src={cover.src}
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onError={() => addError(0)}
+              />
+            ) : (
+              <Image
+                src={cover.src}
+                alt={project.title}
+                fill
+                className="object-cover"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 66vw"
+                priority={priority}
+                onError={() => addError(0)}
+              />
+            ))}
         </div>
-        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center text-white text-sm">
-            ↗
-          </div>
+      )}
+
+      {/* Overlay + naslov + badgevi */}
+      <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+      <div className="absolute bottom-0 left-0 p-5 sm:p-6">
+        <div
+          className="text-xs uppercase tracking-widest mb-1"
+          style={{ color: "var(--accent-light)" }}
+        >
+          {project.type} · {project.year}
         </div>
-        {/* Image count badge */}
-        {project.images.length > 1 && (
-          <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-xs flex items-center gap-1.5">
-            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
-              <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z" />
-            </svg>
-            {project.images.length}
-          </div>
-        )}
+        <div className="font-display text-xl sm:text-2xl text-white tracking-wide leading-tight">
+          {project.title}
+        </div>
       </div>
+      <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center text-white text-sm">
+          ↗
+        </div>
+      </div>
+
+      {/* Video badge */}
+      {videoCount > 0 && (
+        <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-xs flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+            <path d="M8 5v14l11-7z" />
+          </svg>
+          Video
+        </div>
+      )}
+      {/* Broj slika (kartice samo sa slikama) */}
+      {videoCount === 0 && project.media.length > 1 && (
+        <div className="absolute top-4 left-4 px-2.5 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/15 text-white text-xs flex items-center gap-1.5">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current">
+            <path d="M22 16V4c0-1.1-.9-2-2-2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2zm-11-4l2.03 2.71L16 11l4 5H8l3-4zM2 6v14c0 1.1.9 2 2 2h14v-2H4V6H2z" />
+          </svg>
+          {project.media.length}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -294,19 +404,6 @@ function ProjectCard({
 
 export default function ProjectsSection() {
   const [activeProject, setActiveProject] = useState<Project | null>(null);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      projects.forEach((project) => {
-        project.images.forEach((src) => {
-          const img = new window.Image();
-          img.src = src;
-        });
-      });
-    }, 2000);
-
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <section id="projekti" className="py-16 px-4 sm:px-6">
@@ -321,16 +418,13 @@ export default function ProjectsSection() {
           <div>
             <div className="accent-line mb-3" />
             <h2 className="font-display text-5xl text-stone-900 tracking-wide">
-              PROJEKTI
+              S GRADILIŠTA
             </h2>
           </div>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            className="hidden sm:block text-xs uppercase tracking-widest text-stone-500 hover:text-stone-900 transition-colors"
-          >
-            Svi projekti →
-          </motion.button>
+          <p className="hidden sm:block text-sm text-stone-500 max-w-xs text-right font-light">
+            Stvarni radovi, stvarne kuće — slikano i snimano na našim
+            gradilištima
+          </p>
         </motion.div>
 
         <motion.div
@@ -340,10 +434,11 @@ export default function ProjectsSection() {
           viewport={{ once: true, margin: "-60px" }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
         >
-          {projects.map((p) => (
+          {projects.map((p, i) => (
             <ProjectCard
               key={p.id}
               project={p}
+              priority={i === 0}
               onOpen={() => setActiveProject(p)}
             />
           ))}

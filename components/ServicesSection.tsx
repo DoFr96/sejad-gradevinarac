@@ -17,29 +17,6 @@ const itemVariants: Variants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease } },
 };
 
-const services = [
-  {
-    icon: "🏢",
-    title: "VISOKOGRADNJA",
-    desc: "Stambeni i poslovni objekti od temelja do krova. Zidanje, betoniranje, armiranje — sve iz vlastitog tima.",
-  },
-  {
-    icon: "🔧",
-    title: "REKONSTRUKCIJA",
-    desc: "Adaptacije, dogradnje i kompletne rekonstrukcije postojećih objekata. Vraćamo zgrade u život.",
-  },
-  {
-    icon: "🧱",
-    title: "ROH-BAU",
-    desc: "Gruba građevinska faza — temelji, nosive konstrukcije, zidovi, stropovi. Solidna baza za sve što dolazi.",
-  },
-  {
-    icon: "🏗️",
-    title: "FASADE",
-    desc: "Postavljanje fasadnih sustava, toplinska izolacija i završna obrada. Estetika i energetska učinkovitost.",
-  },
-];
-
 export default function ServicesSection() {
   return (
     <section id="usluge" className="py-16 px-4 sm:px-6">
@@ -58,7 +35,7 @@ export default function ServicesSection() {
             </h2>
           </div>
           <p className="hidden sm:block text-sm text-stone-500 max-w-xs text-right font-light">
-            Kompletan raspon građevinskih usluga pod jednim krovom
+            Ne radimo sve — radimo dvije stvari, ali njih radimo bolje od ikoga
           </p>
         </motion.div>
 
@@ -67,30 +44,127 @@ export default function ServicesSection() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-60px" }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+          className="grid grid-cols-1 lg:grid-cols-2 gap-3"
         >
-          {services.map((s) => (
-            <motion.div
-              key={s.title}
-              variants={itemVariants}
-              whileHover={{ y: -4 }}
-              className="grain relative rounded-2xl p-6 border border-stone-200 bg-stone-50 overflow-hidden"
-            >
-              <div className="text-3xl mb-4">{s.icon}</div>
-              <h3 className="font-display text-2xl text-stone-900 tracking-wide mb-2">
-                {s.title}
-              </h3>
-              <p className="text-sm text-stone-500 leading-relaxed font-light">
-                {s.desc}
-              </p>
-            </motion.div>
-          ))}
+          {/* ROH-BAU — glavna usluga */}
+          <motion.div
+            variants={itemVariants}
+            whileHover={{ y: -4 }}
+            className="grain relative rounded-2xl p-8 overflow-hidden"
+            style={{ background: "var(--card-dark)", minHeight: 260 }}
+          >
+            <div
+              className="absolute top-0 right-0 w-48 h-48 opacity-15"
+              style={{
+                background:
+                  "radial-gradient(circle, var(--accent-light), transparent 70%)",
+              }}
+            />
+            <div className="relative z-10 h-full flex flex-col justify-between gap-6">
+              <div>
+                <div
+                  className="text-xs uppercase tracking-widest mb-3"
+                  style={{ color: "var(--accent-light)" }}
+                >
+                  01 · Novogradnja
+                </div>
+                <h3 className="font-display text-4xl text-white tracking-wide mb-3">
+                  ROH-BAU
+                </h3>
+                <p className="text-sm text-stone-400 leading-relaxed font-light max-w-md">
+                  Gruba građevinska faza od nule — temelji, betoniranje,
+                  armiranje, nosivi zidovi, stropovi i krovna konstrukcija. Sve
+                  što kuća mora imati da stoji sto godina, izvedeno precizno i
+                  po pravilima struke.
+                </p>
+              </div>
+              <div className="flex gap-4 flex-wrap">
+                {["Temelji", "Betoniranje", "Armiranje", "Zidanje"].map((v) => (
+                  <div key={v} className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                    <span className="text-xs uppercase tracking-widest text-stone-400">
+                      {v}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* RENOVACIJA STARIH KUĆA — glavna usluga */}
+          <motion.div
+            variants={itemVariants}
+            whileHover={{ y: -4 }}
+            className="grain relative rounded-2xl p-8 overflow-hidden"
+            style={{ background: "var(--accent)", minHeight: 260 }}
+          >
+            <div className="absolute bottom-0 right-0 w-48 h-48 opacity-10 bg-white rounded-full blur-3xl" />
+            <div className="relative z-10 h-full flex flex-col justify-between gap-6">
+              <div>
+                <div className="text-xs uppercase tracking-widest text-white/70 mb-3">
+                  02 · Postojeći objekti
+                </div>
+                <h3 className="font-display text-4xl text-white tracking-wide mb-3">
+                  RENOVACIJA STARIH KUĆA
+                </h3>
+                <p className="text-sm text-white/85 leading-relaxed font-light max-w-md">
+                  Stare kuće su naša specijalnost. Sanacija temelja i zidova,
+                  rušenje i ponovna izgradnja dotrajalih dijelova, nove ploče i
+                  konstrukcije — vraćamo starim kućama čvrstoću i život, a
+                  zadržavamo im dušu.
+                </p>
+              </div>
+              <div className="flex gap-4 flex-wrap">
+                {["Sanacija", "Rušenje", "Dogradnja", "Rekonstrukcija"].map(
+                  (v) => (
+                    <div key={v} className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-white" />
+                      <span className="text-xs uppercase tracking-widest text-white/80">
+                        {v}
+                      </span>
+                    </div>
+                  ),
+                )}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Što sve ulazi u posao */}
+          <motion.div
+            variants={itemVariants}
+            className="grain rounded-2xl p-8 border border-stone-200"
+            style={{ background: "var(--card)" }}
+          >
+            <div className="text-xs uppercase tracking-widest text-stone-500 mb-5">
+              Što sve radimo unutar toga
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+              {[
+                "Iskopi i temelji",
+                "Betonski radovi",
+                "Armirački radovi",
+                "Zidarski radovi",
+                "Betonske ploče i stropovi",
+                "Sanacija vlage i zidova",
+                "Rušenja i demontaže",
+                "Priprema za završne radove",
+              ].map((v) => (
+                <div key={v} className="flex items-center gap-2">
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ background: "var(--accent)" }}
+                  />
+                  <span className="text-sm text-stone-600 font-light">{v}</span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
 
           {/* CTA dark card */}
           <motion.div
             variants={itemVariants}
             whileHover={{ y: -4 }}
-            className="grain relative rounded-2xl overflow-hidden p-6"
+            className="grain relative rounded-2xl overflow-hidden p-8"
             style={{ background: "var(--card-dark)", minHeight: 180 }}
           >
             <div
@@ -100,13 +174,16 @@ export default function ServicesSection() {
                   "radial-gradient(circle, var(--accent-light), transparent 70%)",
               }}
             />
-            <div className="relative z-10 h-full flex flex-col justify-between">
+            <div className="relative z-10 h-full flex flex-col justify-between gap-6">
               <div className="font-display text-3xl text-white tracking-wide">
-                NISTE SIGURNI?
+                IMATE STARU KUĆU
+                <br />
+                ILI GRADITE NOVU?
               </div>
               <div>
                 <p className="text-stone-400 text-sm mb-4 font-light">
-                  Kontaktirajte nas za besplatne konzultacije.
+                  Dođemo, pogledamo i kažemo vam iskreno što treba — i koliko
+                  košta. Konzultacije su besplatne.
                 </p>
                 <motion.button
                   whileHover={{ scale: 1.03 }}

@@ -5,7 +5,7 @@ import { motion, AnimatePresence, Variants } from "framer-motion";
 
 const PHONE_NUMBER = "385958067078";
 const WHATSAPP_MESSAGE =
-  "Pozdrav, zanima me ponuda za gra\u0111evinske radove.";
+  "Pozdrav, zanima me ponuda za roh-bau / renovaciju ku\u0107e.";
 
 const bounceEase = [0.34, 1.56, 0.64, 1] as [number, number, number, number];
 

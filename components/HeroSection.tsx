@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 const ease = [0.22, 1, 0.36, 1] as [number, number, number, number];
@@ -8,6 +9,8 @@ const scrollTo = (id: string) =>
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
 export default function HeroSection() {
+  const [videoError, setVideoError] = useState(false);
+
   return (
     <section
       id="hero"
@@ -23,6 +26,22 @@ export default function HeroSection() {
             className="col-span-12 lg:col-span-8 grain relative rounded-2xl overflow-hidden min-h-[340px] sm:min-h-[480px]"
             style={{ background: "var(--card-dark)" }}
           >
+            {/* Video s gradilišta kao pozadina */}
+            {!videoError && (
+              <video
+                src="/videos/gradiliste-1.mp4"
+                className="absolute inset-0 w-full h-full object-cover"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                onError={() => setVideoError(true)}
+              />
+            )}
+            {/* Tamni overlay da tekst ostane čitljiv */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/50 to-black/30" />
+
             <div
               className="absolute top-0 right-0 w-64 h-64 opacity-10"
               style={{
@@ -30,34 +49,6 @@ export default function HeroSection() {
                   "radial-gradient(circle, var(--accent-light), transparent 70%)",
               }}
             />
-            <div
-              className="absolute bottom-0 left-0 w-48 h-48 opacity-5"
-              style={{
-                background:
-                  "radial-gradient(circle, var(--accent-light), transparent 70%)",
-              }}
-            />
-            <svg
-              className="absolute inset-0 w-full h-full opacity-5"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <defs>
-                <pattern
-                  id="grid"
-                  width="40"
-                  height="40"
-                  patternUnits="userSpaceOnUse"
-                >
-                  <path
-                    d="M 40 0 L 0 0 0 40"
-                    fill="none"
-                    stroke="white"
-                    strokeWidth="0.5"
-                  />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill="url(#grid)" />
-            </svg>
 
             <div className="relative z-10 flex flex-col justify-end h-full px-8 py-12 sm:p-12 min-h-[340px] sm:min-h-[480px]">
               <motion.div
@@ -86,10 +77,11 @@ export default function HeroSection() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.6, ease }}
-                className="text-stone-400 max-w-md text-sm leading-relaxed font-light"
+                className="text-stone-300 max-w-md text-sm leading-relaxed font-light"
               >
-                Od temelja do završnih radova — gradimo i isporučujemo
-                objekte koji odolijevaju testu vremena.
+                Roh-bau i renovacija starih kuća. Dvije stvari koje radimo — i
+                radimo ih majstorski. Od temelja i nosivih zidova do stare kuće
+                vraćene u život.
               </motion.p>
             </div>
           </motion.div>
@@ -158,7 +150,7 @@ export default function HeroSection() {
             </motion.div>
           </div>
 
-          {/* Bottom certifications strip */}
+          {/* Bottom strip — čime se bavimo */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -167,14 +159,14 @@ export default function HeroSection() {
             style={{ background: "var(--card)" }}
           >
             <div className="text-xs uppercase tracking-widest text-stone-500">
-              Certificirani i ovlašteni
+              Specijalizirani za
             </div>
             <div className="flex flex-wrap gap-6 items-center">
               {[
-                "ISO 9001:2015",
-                "ISO 14001:2015",
-                "OHSAS 18001",
-                "HZN Ovlaštenje",
+                "Roh-bau",
+                "Renovacija starih kuća",
+                "Vlastiti tim — bez podizvođača",
+                "Rijeka i okolica",
               ].map((c) => (
                 <div key={c} className="flex items-center gap-1.5">
                   <div
