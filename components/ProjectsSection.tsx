@@ -19,21 +19,26 @@ const itemVariants: Variants = {
 /* ─────────────────────────────────────────────────────────────
    MEDIJI S GRADILIŠTA
    Slike idu u  public/projects/  a videi u  public/videos/
-   Slobodno promijeni naslove i opise — samo pazi da se
-   nazivi datoteka poklapaju s onima u public mapi.
 
-   ŠTO JE POPRAVLJENO:
-   1) Lightbox više NE renderira svih 8 slika odjednom kao
-      <Image fill priority>. To je bio uzrok da se dio slika
-      ne učita — 8 istovremenih "priority" zahtjeva zaguši
-      Next-ov image optimizer i dio otkaže. Sada se prikazuje
-      SAMO trenutna slika (obični <img>), a susjedne se tiho
-      predučitaju u cache pa je listanje i dalje trenutno.
-   2) U gridu je "priority" samo na PRVOJ kartici; ostale se
-      lijeno učitavaju kad dođu u vidokrug.
+   BRZINA UČITAVANJA:
+   • U gridu se VIDEO NE učitava — prikazuje se "poster" (still
+     slika). Video se skine i krene tek u lightboxu, kad otvoriš.
+   • Ništa u ovoj sekciji nema "priority" — next/image je lazy,
+     pa se slike/posteri skidaju tek kad doskrolaš do sekcije.
+   • Lightbox video ima poster -> dok se ne pokrene stoji slika.
+
+   POSTERE napravi iz videa (prvi frame) ffmpeg-om, npr.:
+     ffmpeg -i public/videos/gradiliste-5.mp4 -vframes 1 -q:v 3 \
+            public/videos/gradiliste-5-poster.jpg
    ───────────────────────────────────────────────────────────── */
 
-type MediaItem = { kind: "image" | "video"; src: string };
+type MediaItem = {
+  kind: "image" | "video";
+  src: string;
+  /* Za video: still slika koja stoji dok se video ne pokrene.
+     Koristi se i kao naslovnica u gridu (video se tamo ne učitava). */
+  poster?: string;
+};
 
 type Project = {
   id: number;
@@ -69,8 +74,16 @@ const projects: Project[] = [
     fallback: "from-amber-800 to-stone-900",
     span: "lg:col-span-1",
     media: [
-      { kind: "video", src: "/videos/gradiliste-2.mp4" },
-      { kind: "video", src: "/videos/gradiliste-22.mp4" },
+      {
+        kind: "video",
+        src: "/videos/gradiliste-2.mp4",
+        poster: "/videos/gradiliste-2-poster.jpg",
+      },
+      {
+        kind: "video",
+        src: "/videos/gradiliste-22.mp4",
+        poster: "/videos/gradiliste-22-poster.jpg",
+      },
     ],
   },
   {
@@ -80,7 +93,13 @@ const projects: Project[] = [
     year: "2026",
     fallback: "from-stone-700 to-stone-900",
     span: "lg:col-span-1",
-    media: [{ kind: "video", src: "/videos/gradiliste-5.mp4" }],
+    media: [
+      {
+        kind: "video",
+        src: "/videos/gradiliste-5.mp4",
+        poster: "/videos/gradiliste-5-poster.jpg",
+      },
+    ],
   },
   {
     id: 4,
@@ -89,7 +108,13 @@ const projects: Project[] = [
     year: "2026",
     fallback: "from-stone-500 to-amber-900",
     span: "lg:col-span-2",
-    media: [{ kind: "video", src: "/videos/gradiliste-4.mp4" }],
+    media: [
+      {
+        kind: "video",
+        src: "/videos/gradiliste-4.mp4",
+        poster: "/videos/gradiliste-4-poster.jpg",
+      },
+    ],
   },
   {
     id: 6,
@@ -142,22 +167,18 @@ function Lightbox({
     };
   }, [onClose, prev, next]);
 
-  /* Predučitaj SAMO susjedne slike (prethodnu i sljedeću) u
-     browser cache. Zato je listanje trenutno, a NE šaljemo
-     svih 8 zahtjeva odjednom (to je bilo ono što je pucalo). */
-  useEffect(() => {
-    if (n < 2) return;
-    [(current + 1) % n, (current - 1 + n) % n].forEach((i) => {
-      const m = project.media[i];
-      if (m?.kind === "image") {
-        const img = new window.Image();
-        img.src = m.src;
-      }
-    });
-  }, [current, n, project.media]);
+  const addError = (idx: number) => setErrored((s) => new Set(s).add(idx));
 
-  const media = project.media[current];
-  const isErrored = errored.has(current);
+  /* Prozor od 3 medija: prethodni, trenutni, sljedeći.
+     Susjedne next/image komponente se montiraju (i optimizirano
+     predučitaju u cache) pa je listanje trenutno — a istovremeno
+     ide najviše 3 zahtjeva, ne svih 8, pa optimizer ne puca.
+     Video se učita SAMO kad je trenutni (ne prije). */
+  const windowIdx = new Set([
+    current,
+    (current - 1 + n) % n,
+    (current + 1) % n,
+  ]);
 
   return (
     <motion.div
@@ -195,42 +216,57 @@ function Lightbox({
         </button>
       </div>
 
-      {/* Glavni medij — prikazuje se SAMO trenutni.
-          Za slike koristimo obični <img> (bez Next optimizera i
-          bez "fill" stackanja) — tako se uvijek pouzdano učita.
+      {/* Glavni medij — prozor od 3, samo je trenutni vidljiv.
+          Video ima poster: dok se ne pokrene stoji slika.
           9:16 ostaje 9:16 jer je object-contain. */}
       <div
         className="relative z-10 w-full max-w-5xl mx-4 sm:mx-8 h-[72vh] sm:h-[78vh] flex items-center justify-center"
         onClick={(e) => e.stopPropagation()}
       >
-        {media.kind === "video" ? (
-          <video
-            key={media.src}
-            src={media.src}
-            className="max-h-full max-w-full object-contain"
-            controls
-            autoPlay
-            playsInline
-          />
-        ) : isErrored ? (
-          <div
-            className={`flex items-center justify-center w-64 h-40 rounded-xl bg-gradient-to-br ${project.fallback} text-white/80 text-sm text-center px-4`}
-          >
-            Slika se ne može učitati:
-            <br />
-            {media.src}
-          </div>
-        ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            key={media.src}
-            src={media.src}
-            alt={`${project.title} — ${current + 1}`}
-            className="max-h-full max-w-full object-contain select-none"
-            draggable={false}
-            onError={() => setErrored((s) => new Set(s).add(current))}
-          />
-        )}
+        {project.media.map((m, i) => {
+          if (!windowIdx.has(i)) return null;
+          const isCurrent = i === current;
+          return (
+            <div
+              key={i}
+              className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${
+                isCurrent ? "opacity-100" : "opacity-0 pointer-events-none"
+              }`}
+            >
+              {m.kind === "video" ? (
+                isCurrent && (
+                  <video
+                    src={m.src}
+                    poster={m.poster}
+                    className="max-h-full max-w-full object-contain"
+                    controls
+                    autoPlay
+                    playsInline
+                    preload="metadata"
+                  />
+                )
+              ) : errored.has(i) ? (
+                <div
+                  className={`flex items-center justify-center w-64 h-40 rounded-xl bg-gradient-to-br ${project.fallback} text-white/80 text-sm text-center px-4`}
+                >
+                  Slika se ne može učitati:
+                  <br />
+                  {m.src}
+                </div>
+              ) : (
+                <Image
+                  src={m.src}
+                  alt={`${project.title} — ${i + 1}`}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 1024px) 95vw, 1024px"
+                  priority={isCurrent}
+                  onError={() => addError(i)}
+                />
+              )}
+            </div>
+          );
+        })}
 
         {/* Strelice */}
         {n > 1 && (
@@ -285,16 +321,18 @@ function Lightbox({
 
 function ProjectCard({
   project,
-  priority,
   onOpen,
 }: {
   project: Project;
-  priority: boolean;
   onOpen: () => void;
 }) {
   const [errored, setErrored] = useState<Set<number>>(new Set());
   const cover = project.media[0];
   const videoCount = project.media.filter((m) => m.kind === "video").length;
+
+  /* Naslovnica: ako je video -> koristi njegov poster (video se
+     u gridu NE učitava). Ako je slika -> sama slika. */
+  const coverSrc = cover.kind === "video" ? cover.poster : cover.src;
 
   const addError = (idx: number) => setErrored((s) => new Set(s).add(idx));
 
@@ -328,39 +366,44 @@ function ProjectCard({
           <div className="absolute inset-y-0 left-1/2 w-px bg-black/30 -translate-x-1/2" />
         </div>
       ) : (
-        /* ── Standardna 16:9 kartica — prikazuje se SAMO naslovnica ── */
+        /* ── Standardna 16:9 kartica — samo naslovna slika/poster ── */
         <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
           <div
             className={`absolute inset-0 bg-gradient-to-br ${project.fallback}`}
           />
-          {!errored.has(0) &&
-            (cover.kind === "video" ? (
-              <video
-                src={cover.src}
-                className="absolute inset-0 w-full h-full object-cover"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                onError={() => addError(0)}
-              />
-            ) : (
-              <Image
-                src={cover.src}
-                alt={project.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 66vw"
-                priority={priority}
-                onError={() => addError(0)}
-              />
-            ))}
+          {/* Lazy: next/image bez priority -> skida se tek kad
+              doskrolaš blizu. Video se ovdje uopće ne učitava. */}
+          {coverSrc && !errored.has(0) && (
+            <Image
+              src={coverSrc}
+              alt={project.title}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 66vw"
+              onError={() => addError(0)}
+            />
+          )}
         </div>
       )}
 
-      {/* Overlay + naslov + badgevi */}
+      {/* Overlay */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+      {/* Play gumb u sredini (samo za video projekte) */}
+      {cover.kind === "video" && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="w-14 h-14 rounded-full bg-black/35 backdrop-blur-sm border border-white/25 flex items-center justify-center text-white transition-transform duration-300 group-hover:scale-110">
+            <svg
+              viewBox="0 0 24 24"
+              className="w-6 h-6 fill-current translate-x-0.5"
+            >
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </div>
+        </div>
+      )}
+
+      {/* Naslov */}
       <div className="absolute bottom-0 left-0 p-5 sm:p-6">
         <div
           className="text-xs uppercase tracking-widest mb-1"
@@ -372,6 +415,8 @@ function ProjectCard({
           {project.title}
         </div>
       </div>
+
+      {/* Hover strelica */}
       <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
         <div className="w-8 h-8 rounded-full bg-white/15 backdrop-blur-sm border border-white/25 flex items-center justify-center text-white text-sm">
           ↗
@@ -434,11 +479,10 @@ export default function ProjectsSection() {
           viewport={{ once: true, margin: "-60px" }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
         >
-          {projects.map((p, i) => (
+          {projects.map((p) => (
             <ProjectCard
               key={p.id}
               project={p}
-              priority={i === 0}
               onOpen={() => setActiveProject(p)}
             />
           ))}
