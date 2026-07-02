@@ -240,6 +240,7 @@ function Lightbox({
                     poster={m.poster}
                     className="max-h-full max-w-full object-contain"
                     controls
+                    muted
                     autoPlay
                     playsInline
                     preload="metadata"
